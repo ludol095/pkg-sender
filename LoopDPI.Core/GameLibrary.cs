@@ -190,7 +190,7 @@ public static class FolderReader
         long amprBytes = 0;
         try
         {
-            foreach (var f in Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories))
+            foreach (var f in Directory.EnumerateFiles(dir, "*", SearchOption.TopDirectoryOnly))
             {
                 nfiles++;
                 try

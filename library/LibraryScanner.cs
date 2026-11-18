@@ -17,7 +17,7 @@ public static class LibraryScanner
     private sealed record CachedGame(long Size, long Mtime, string Title, string ContentId, string TitleId, string Platform, string Description, string IconB64, string Format, bool IsFolder, string Version, string ContentType, bool IsDlc);
     private sealed record CacheFile(List<string> Roots, Dictionary<string, CachedGame> Games, int Version);
 
-    private const int CacheVersion = 7; // bump when parsing changes (icons/formats)
+    private const int CacheVersion = 8; // bump when parsing changes (icons/formats)
 
     public static List<string> LoadRoots()
     {
@@ -208,11 +208,9 @@ public static class LibraryScanner
                 try
                 {
                     var attr = File.GetAttributes(e);
-                    if ((attr & FileAttributes.ReparsePoint) != 0)
-                        continue; // junctions/symlinks: no loops
-                    if ((attr & FileAttributes.System) != 0)
-                        continue;
-                    isDir = (attr & FileAttributes.Directory) != 0;
+                    // Sous Linux/Docker, ne bloquer que les vrais liens symboliques pour éviter les boucles infinies
+                    if (new FileInfo(e).LinkTarget != null)
+                        continue;isDir = (attr & FileAttributes.Directory) != 0;
                 }
                 catch
                 {

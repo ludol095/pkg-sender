@@ -1103,14 +1103,14 @@ public partial class LibraryView : UserControl
                 {
                     // Folders stay out (not single files); images ride along
                     // for the console Images catalog, PKGs for Games.
-                    if (g.Info.IsFolder)
-                        continue;
+//                    if (g.Info.IsFolder)
+//                      continue;
                     string gid = !string.IsNullOrWhiteSpace(g.Info.TitleId)
                         ? g.Info.TitleId : g.Info.ContentId;
                     string gver = string.IsNullOrWhiteSpace(g.Info.Version)
                         ? "" : " • v" + g.Info.Version.TrimStart('v', 'V');
                     string fmt = string.IsNullOrEmpty(g.Info.Format) ? "pkg" : g.Info.Format;
-                    string role = fmt != "pkg" ? "Image"
+                    string role = (fmt != "pkg" && fmt != "folder") ? "Image"
                         : g.Info.IsDlc ? "DLC"
                         : g.Info.ContentType.Equals("gp", StringComparison.OrdinalIgnoreCase) ? "Patch"
                         : "Game";
