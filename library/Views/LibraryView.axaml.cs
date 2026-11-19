@@ -256,8 +256,8 @@ public partial class LibraryView : UserControl
                 g.IsSelected = selected.Contains(g);
             // Selection-aware actions: PKGs light up Send, images light up
             // Copy; the other one goes dim so the right action is obvious.
-            bool hasPkg = selected.Any(g => g.Role != "Image");
-            bool hasImg = selected.Any(g => g.Role == "Image");
+            bool hasPkg = selected.Any(g => g.Role != "Image" && !g.IsFolder);
+            bool hasImg = selected.Any(g => g.Role == "Image" || g.IsFolder);
             var btnSend = this.FindControl<Button>("BtnSend");
             var btnCopy = this.FindControl<Button>("BtnCopy");
             btnSend.IsEnabled = hasPkg;
@@ -286,7 +286,7 @@ public partial class LibraryView : UserControl
         {
             if ((e.Source as Control)?.DataContext is GameItem g)
             {
-                if (g.Role == "Image")
+                if (g.Role == "Image" || g.IsFolder)
                     await CopyImagesAsync(new[] { g });
                 else
                     EnqueueGames(new[] { g });
@@ -1595,7 +1595,24 @@ public partial class LibraryView : UserControl
 
     private async Task CopyImagesInnerAsync(IEnumerable<GameItem>? only = null)
     {
-        var picked = (only ?? GamesBox.SelectedItems?.Cast<GameItem>() ?? Enumerable.Empty<GameItem>())
+        var allSelected = (only ?? GamesBox.SelectedItems?.Cast<GameItem>() ?? Enumerable.Empty<GameItem>()).ToList();
+        var folders = allSelected.Where(g => g.IsFolder).ToList();
+        if (folders.Count > 0)
+        {
+            if (string.IsNullOrWhiteSpace(_m.PsIp))
+            {
+                _m.Status = "No console address — set it at the top (Test to verify).";
+                return;
+            }
+            var queueItems = folders.Select(g => new QueueItem { Game = g }).ToList();
+            foreach (var qi in queueItems)
+                _m.Queue.Add(qi);
+            UpdateQueueLabel();
+            await SendFilesAsync(queueItems);
+            return;
+        }
+
+        var picked = allSelected
             .Where(g => g.Role == "Image" && !g.IsFolder)
             .ToList();
         if (picked.Count == 0)

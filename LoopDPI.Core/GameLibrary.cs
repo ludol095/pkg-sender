@@ -188,29 +188,22 @@ public static class FolderReader
         long total = 0;
         int nfiles = 0, ampr = 0;
         long amprBytes = 0;
+
         try
-        {
-            foreach (var f in Directory.EnumerateFiles(dir, "*", SearchOption.TopDirectoryOnly))
             {
-                nfiles++;
-                try
-                {
-                    var fi = new FileInfo(f);
-                    total += fi.Length;
-                    if (fi.Length > 1024 * 1024 && IsAmpr(f))
-                    {
-                        ampr++;
-                        amprBytes += fi.Length;
-                    }
-                }
-                catch
-                {
-                }
-            }
-        }
-        catch
-        {
-        }
+            var opts = new EnumerationOptions
+            {
+            RecurseSubdirectories = true,
+            IgnoreInaccessible = true,
+            AttributesToSkip = FileAttributes.ReparsePoint
+            };
+        total = new DirectoryInfo(dir)
+            .EnumerateFiles("*", opts)
+            .Sum(f => f.Length);
+    }
+    catch
+    {
+    }
 
         string title = string.IsNullOrEmpty(meta.Title) ? new DirectoryInfo(dir).Name : meta.Title;
         string desc = ampr > 0
